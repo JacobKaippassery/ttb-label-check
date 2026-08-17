@@ -1,0 +1,10 @@
+# Never let a local key reach an image layer.
+.env
+.env.local
+
+node_modules
+dist
+samples/generated
+.git
+.claude
+*.log
