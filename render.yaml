@@ -1,0 +1,36 @@
+# Render Blueprint — deploys straight from the Dockerfile.
+#
+# Render is used here because the free tier needs no card and reads this file
+# automatically, which suits a prototype that reviewers need to open once. Any
+# container host works equally well: Railway, Fly.io, or Azure Container Apps,
+# which is where Marcus said the agency already runs.
+#
+# The API key is deliberately NOT in this file. `sync: false` tells Render to
+# prompt for it at deploy time and store it as a secret, so the key never
+# reaches the repository or an image layer.
+services:
+  - type: web
+    name: ttb-label-check
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      # Opus 5 is the accuracy default. See the README's performance section
+      # for the measured latency trade-off before changing this.
+      - key: ANTHROPIC_MODEL
+        value: claude-opus-5
+      - key: EXTRACTION_EFFORT
+        value: low
+      - key: EXTRACTION_THINKING
+        value: disabled
+      # Set to true to run the whole interface against stored transcriptions
+      # with no outbound API calls and no spend at all.
+      - key: DEMO_MODE
+        value: false
