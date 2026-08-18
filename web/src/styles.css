@@ -110,13 +110,6 @@ h3 {
   color: #c3ccd6;
   font-size: 0.95rem;
 }
-.masthead .model-badge {
-  margin-left: auto;
-  font-size: 0.85rem;
-  color: #c3ccd6;
-  font-variant-numeric: tabular-nums;
-}
-
 main {
   max-width: 1180px;
   margin: 0 auto;

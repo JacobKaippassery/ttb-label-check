@@ -2,13 +2,18 @@ import { useEffect, useState } from 'react';
 import { SingleCheck } from './components/SingleCheck.tsx';
 import { BatchCheck } from './components/BatchCheck.tsx';
 
+/**
+ * Only the fields the interface actually reacts to.
+ *
+ * /api/health still reports the model, effort and concurrency for operators
+ * debugging a deployment — but an agent reviewing a label has no use for which
+ * model is running, and on a public URL it is infrastructure detail with no
+ * reason to be on screen.
+ */
 interface Health {
   apiKeyConfigured: boolean;
   demoMode: boolean;
   canRun: boolean;
-  model: string;
-  effort: string;
-  batchConcurrency: number;
 }
 
 type Tab = 'single' | 'batch';
@@ -34,11 +39,6 @@ export function App() {
         <div className="masthead-inner">
           <h1>TTB Label Check</h1>
           <span className="tagline">Compare a label against its application</span>
-          {health && (
-            <span className="model-badge">
-              {health.model} · effort {health.effort} · {health.batchConcurrency} at a time
-            </span>
-          )}
         </div>
       </header>
 
