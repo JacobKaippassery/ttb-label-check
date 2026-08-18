@@ -385,6 +385,10 @@ bounded-concurrency pool. Each is short, exactly scoped, and independently teste
 
 ## Layout
 
+For a file-by-file walkthrough with real code excerpts, request/response contracts, and the
+reasoning behind each boundary — see [`docs/TECHNICAL.md`](docs/TECHNICAL.md). This section is
+the map; that document is the tour.
+
 ```
 server/
   rules/            ← every compliance decision. Pure, tested, no I/O.
