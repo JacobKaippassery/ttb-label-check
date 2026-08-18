@@ -20,8 +20,9 @@ services:
         sync: false
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3001
+      # PORT is deliberately not set. Render injects its own value and routes
+      # to whatever the process listens on; config.ts reads process.env.PORT,
+      # so pinning it here would only create a chance of the two disagreeing.
       # Opus 5 is the accuracy default. See the README's performance section
       # for the measured latency trade-off before changing this.
       - key: ANTHROPIC_MODEL
