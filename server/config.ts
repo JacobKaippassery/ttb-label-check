@@ -7,8 +7,28 @@ function int(name: string, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+/**
+ * Reads a secret from the environment and strips the two artifacts that
+ * survive a copy-paste into a hosting platform's secret field:
+ *
+ *   - surrounding quotes, because `KEY="sk-ant-..."` in a dashboard field is
+ *     stored with the quotes as part of the value, unlike in a shell
+ *   - leading and trailing whitespace, including the newline that comes along
+ *     when a key is copied from a terminal or a wrapped line
+ *
+ * Both produce a value that is present and non-empty — so every "is the key
+ * configured?" check passes — and then fails at the API with a bare
+ * `invalid x-api-key`, which points at the key rather than at the paste.
+ * Found on the first real deployment.
+ */
+function secret(name: string): string {
+  const raw = process.env[name];
+  if (!raw) return '';
+  return raw.trim().replace(/^["']|["']$/g, '').trim();
+}
+
 export const config = {
-  apiKey: process.env.ANTHROPIC_API_KEY ?? '',
+  apiKey: secret('ANTHROPIC_API_KEY'),
 
   /**
    * Claude Opus 5 by default: this is a government compliance determination and

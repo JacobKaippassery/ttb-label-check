@@ -64,6 +64,43 @@ describe('image preparation', () => {
   });
 });
 
+describe('secret reading', () => {
+  // Regression guard for the first real deployment failure: the key was
+  // present and non-empty (so every "is it configured?" check passed) but
+  // carried a paste artifact, and the only symptom was a 401 from the API.
+  const withEnv = async (value: string | undefined, fn: (key: string) => void) => {
+    const previous = process.env.ANTHROPIC_API_KEY;
+    if (value === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = value;
+    // config caches at import, so re-import with a cache-busting query.
+    const fresh = await import(`../server/config.ts?secret=${Math.random()}`);
+    fn(fresh.config.apiKey);
+    if (previous === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = previous;
+  };
+
+  it('strips a trailing newline copied along with the key', async () => {
+    await withEnv('sk-ant-example123\n', (key) => assert.equal(key, 'sk-ant-example123'));
+  });
+
+  it('strips surrounding quotes, which a dashboard field keeps verbatim', async () => {
+    await withEnv('"sk-ant-example123"', (key) => assert.equal(key, 'sk-ant-example123'));
+    await withEnv("'sk-ant-example123'", (key) => assert.equal(key, 'sk-ant-example123'));
+  });
+
+  it('strips quotes and surrounding whitespace together', async () => {
+    await withEnv('  "sk-ant-example123"  ', (key) => assert.equal(key, 'sk-ant-example123'));
+  });
+
+  it('leaves a clean key untouched', async () => {
+    await withEnv('sk-ant-example123', (key) => assert.equal(key, 'sk-ant-example123'));
+  });
+
+  it('treats an unset key as empty rather than throwing', async () => {
+    await withEnv(undefined, (key) => assert.equal(key, ''));
+  });
+});
+
 describe('bounded concurrency pool', () => {
   it('returns results in input order regardless of completion order', async () => {
     // Reversed delays: the last item finishes first. A CSV export lines up

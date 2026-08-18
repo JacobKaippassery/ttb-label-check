@@ -197,6 +197,32 @@ async function callModel(model: string, image: PreparedImage) {
     });
   } catch (err) {
     if (err instanceof Anthropic.APIError) {
+      // Translate the failures an operator can actually act on. The raw API
+      // message for a bad key is "invalid x-api-key", which reads as "the key
+      // is wrong" when the usual cause is that the key was pasted with a
+      // trailing newline or wrapping quotes into a hosting platform's field.
+      if (err.status === 401) {
+        throw new ExtractionError(
+          'The Anthropic API rejected the key. Check that ANTHROPIC_API_KEY is set ' +
+            'correctly wherever this is running — a key pasted with surrounding quotes, ' +
+            'a trailing space or newline, or one that was cut short will all fail this way.',
+          'api_error',
+        );
+      }
+      if (err.status === 429) {
+        throw new ExtractionError(
+          'Rate limited by the Anthropic API. Wait a moment and retry, or lower ' +
+            'BATCH_CONCURRENCY if this happens during a large batch.',
+          'api_error',
+        );
+      }
+      if (err.status === 400 && /credit|balance|billing/i.test(err.message)) {
+        throw new ExtractionError(
+          'The Anthropic account has no available credit. Add credit in the Console ' +
+            'billing settings, or set DEMO_MODE=true to run against stored transcriptions.',
+          'api_error',
+        );
+      }
       throw new ExtractionError(`Claude API error (${err.status}): ${err.message}`, 'api_error');
     }
     throw err;
